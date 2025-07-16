@@ -32,6 +32,7 @@ Seleccionar dispositivo y correr
 
 4. Agregaría get_it: Es un service locator para gestionar inyección de dependencias.
 
+5. Animaciones al confirmar la compra: Agregaría Lottie o Rive para mejorar la confirmación de compra mediante un BottomSheet
 
 
 
