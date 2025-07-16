@@ -1,6 +1,4 @@
-# meru_test
-
-A new Flutter project.
+# meru_test (MoneyTransfer)
 
 ## Cómo correr el proyecto
 
