@@ -1,118 +1,122 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meru_test/core/shared/data/models/account_model.dart';
 import 'package:meru_test/features/transfer/common/transfer_details.dart';
+
+final dummyOrigin = AccountModel(
+  id: '1',
+  fullName: 'Origin',
+  avatarUrl: '',
+  balance: 100.0,
+);
+final dummyRecipient = AccountModel(
+  id: '2',
+  fullName: 'Recipient',
+  avatarUrl: '',
+  balance: 100.0,
+);
 
 void main() {
   group('TransferDetails', () {
     test('should create TransferDetails with valid parameters', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyRecipient,
         amount: 50.0,
       );
 
-      // Assert
-      expect(transferDetails.originBalance, 100.0);
-      expect(transferDetails.originAccountId, '1');
-      expect(transferDetails.recipientId, '2');
+      expect(transferDetails.originAccount, dummyOrigin);
+      expect(transferDetails.recipientAccount, dummyRecipient);
       expect(transferDetails.amount, 50.0);
     });
 
     test('should create TransferDetails with zero amount', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyRecipient,
         amount: 0.0,
       );
 
-      // Assert
       expect(transferDetails.amount, 0.0);
     });
 
     test('should create TransferDetails with decimal amount', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyRecipient,
         amount: 25.50,
       );
 
-      // Assert
       expect(transferDetails.amount, 25.50);
     });
 
     test('should create TransferDetails with large amount', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 10000.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyRecipient,
         amount: 9999.99,
       );
 
-      // Assert
       expect(transferDetails.amount, 9999.99);
     });
 
     test('should create TransferDetails with same origin and recipient', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: '1',
-        recipientId: '1',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyOrigin,
         amount: 50.0,
       );
 
-      // Assert
-      expect(transferDetails.originAccountId, transferDetails.recipientId);
+      expect(transferDetails.originAccount, transferDetails.recipientAccount);
     });
 
     test('should create TransferDetails with different account IDs', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: 'account_123',
-        recipientId: 'account_456',
+        originAccount: AccountModel(
+          id: 'account_123',
+          fullName: 'A',
+          avatarUrl: '',
+          balance: 100.0,
+        ),
+        recipientAccount: AccountModel(
+          id: 'account_456',
+          fullName: 'B',
+          avatarUrl: '',
+          balance: 100.0,
+        ),
         amount: 50.0,
       );
 
-      // Assert
-      expect(transferDetails.originAccountId, 'account_123');
-      expect(transferDetails.recipientId, 'account_456');
+      expect(transferDetails.originAccount.id, 'account_123');
+      expect(transferDetails.recipientAccount.id, 'account_456');
       expect(
-        transferDetails.originAccountId,
-        isNot(equals(transferDetails.recipientId)),
+        transferDetails.originAccount.id,
+        isNot(equals(transferDetails.recipientAccount.id)),
       );
     });
 
     test('should create TransferDetails with zero origin balance', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 0.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: AccountModel(
+          id: '1',
+          fullName: 'Origin',
+          avatarUrl: '',
+          balance: 0.0,
+        ),
+        recipientAccount: dummyRecipient,
         amount: 0.0,
       );
 
-      // Assert
-      expect(transferDetails.originBalance, 0.0);
+      expect(transferDetails.originAccount.balance, 0.0);
       expect(transferDetails.amount, 0.0);
     });
 
     test('should create TransferDetails with negative amount', () {
-      // Arrange & Act
       final transferDetails = TransferDetails(
-        originBalance: 100.0,
-        originAccountId: '1',
-        recipientId: '2',
+        originAccount: dummyOrigin,
+        recipientAccount: dummyRecipient,
         amount: -10.0,
       );
 
-      // Assert
       expect(transferDetails.amount, -10.0);
     });
   });

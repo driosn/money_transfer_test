@@ -25,7 +25,7 @@ class TransferRepositoryImpl implements TransferRepository {
       if (transferDetails.amount <= 0) {
         return left(Failure('El monto debe ser mayor a cero.'));
       }
-      if (transferDetails.originBalance < transferDetails.amount) {
+      if (transferDetails.originAccount.balance < transferDetails.amount) {
         return left(Failure('Saldo insuficiente.'));
       }
       await _transferDataSource.executeTransfer(transferDetails);
@@ -46,6 +46,18 @@ class TransferRepositoryImpl implements TransferRepository {
       return right(accounts);
     } catch (e) {
       return left(Failure('Error al obtener destinatarios.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveTransferToHistory(
+    TransferDetails transferDetails,
+  ) async {
+    try {
+      await _transferDataSource.saveTransferToHistory(transferDetails);
+      return right(null);
+    } catch (e) {
+      return left(Failure(e.toString()));
     }
   }
 }

@@ -25,10 +25,8 @@ void main() {
     });
 
     test('initial state should have origin account', () {
-      // Act
       final cubit = TransferFormCubit(originAccount: originAccount);
 
-      // Assert
       expect(cubit.state.originAccount, originAccount);
       expect(cubit.state.recipient, null);
       expect(cubit.state.amount, null);
@@ -147,72 +145,56 @@ void main() {
 
     group('validate', () {
       test('should return true when form is valid', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
         cubit.setRecipient(recipientAccount);
         cubit.setAmount(50.0);
 
-        // Act
         final isValid = cubit.validate();
 
-        // Assert
         expect(isValid, true);
       });
 
       test('should return false when recipient is missing', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
         cubit.setAmount(50.0);
 
-        // Act
         final isValid = cubit.validate();
 
-        // Assert
         expect(isValid, false);
       });
 
       test('should return false when amount is missing', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
         cubit.setRecipient(recipientAccount);
-        // Don't set amount, keep it null
 
-        // Act & Assert
         expect(() => cubit.validate(), throwsA(isA<TypeError>()));
       });
 
       test('should return false when amount is invalid', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
         cubit.setRecipient(recipientAccount);
-        cubit.setAmount(150.0); // Exceeds balance
+        cubit.setAmount(150.0);
 
-        // Act & Assert
         expect(() => cubit.validate(), throwsA(isA<TypeError>()));
       });
     });
 
     group('transferDetails', () {
       test('should return TransferDetails when form is valid', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
         cubit.setRecipient(recipientAccount);
         cubit.setAmount(50.0);
 
-        // Act
         final transferDetails = cubit.transferDetails;
 
-        // Assert
-        expect(transferDetails.originAccountId, originAccount.id);
-        expect(transferDetails.recipientId, recipientAccount.id);
+        expect(transferDetails.originAccount, originAccount);
+        expect(transferDetails.recipientAccount, recipientAccount);
         expect(transferDetails.amount, 50.0);
       });
 
       test('should throw exception when form is invalid', () {
-        // Arrange
         final cubit = TransferFormCubit(originAccount: originAccount);
 
-        // Act & Assert
         expect(() => cubit.transferDetails, throwsException);
       });
     });

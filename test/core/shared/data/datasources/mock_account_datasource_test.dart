@@ -11,19 +11,15 @@ void main() {
     });
 
     test('should return list of accounts', () async {
-      // Act
       final accounts = await dataSource.getAccounts();
 
-      // Assert
       expect(accounts, isA<List<AccountModel>>());
       expect(accounts.isNotEmpty, true);
     });
 
     test('should return accounts with valid data', () async {
-      // Act
       final accounts = await dataSource.getAccounts();
 
-      // Assert
       for (final account in accounts) {
         expect(account.id, isNotEmpty);
         expect(account.fullName, isNotEmpty);
@@ -34,19 +30,15 @@ void main() {
     });
 
     test('should return accounts with unique IDs', () async {
-      // Act
       final accounts = await dataSource.getAccounts();
 
-      // Assert
       final ids = accounts.map((account) => account.id).toSet();
       expect(ids.length, equals(accounts.length));
     });
 
     test('should return accounts with valid avatar URLs', () async {
-      // Act
       final accounts = await dataSource.getAccounts();
 
-      // Assert
       for (final account in accounts) {
         expect(account.avatarUrl, startsWith('http'));
       }

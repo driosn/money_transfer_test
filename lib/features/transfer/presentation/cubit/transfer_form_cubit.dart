@@ -62,9 +62,8 @@ class TransferFormCubit extends Cubit<TransferFormState> {
     }
 
     return TransferDetails(
-      originBalance: state.originAccount.balance,
-      originAccountId: state.originAccount.id,
-      recipientId: state.recipient!.id,
+      originAccount: state.originAccount,
+      recipientAccount: state.recipient!,
       amount: state.amount!,
     );
   }

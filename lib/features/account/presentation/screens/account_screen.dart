@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meru_test/core/shared/data/models/account_model.dart';
-import 'package:meru_test/features/transfer/transfer_screen.dart';
+import 'package:meru_test/features/account/presentation/cubit/account_cubit.dart';
+import 'package:meru_test/features/transfer/presentation/screens/transfer_screen.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   static const String routeName = 'account';
   static const String routePath = '/account';
 
@@ -12,18 +14,27 @@ class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key, required this.account});
 
   @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AccountCubit>().getAccountData(widget.account);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // Header con degradado y datos del usuario
-          _AccountHeader(account: account),
-          // Transacciones recientes
-          Expanded(child: _RecentTransactions()),
+          _AccountHeader(account: widget.account),
+
+          Expanded(child: _RecentTransactions(account: widget.account)),
         ],
       ),
-      bottomNavigationBar: _BottomNavigationBar(),
     );
   }
 }
@@ -51,7 +62,6 @@ class _AccountHeader extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Back arrow at top left
           Positioned(
             top: 0,
             left: 0,
@@ -62,8 +72,8 @@ class _AccountHeader extends StatelessWidget {
           ),
           Column(
             children: [
-              const SizedBox(height: 8), // To give space below the back arrow
-              // Nombre del usuario
+              const SizedBox(height: 8),
+
               Text(
                 account.fullName,
                 style: const TextStyle(
@@ -73,13 +83,11 @@ class _AccountHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Avatar
               CircleAvatar(
                 radius: 40,
                 backgroundImage: NetworkImage(account.avatarUrl),
               ),
               const SizedBox(height: 24),
-              // Card con saldo y botón
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -142,61 +150,116 @@ class _AccountHeader extends StatelessWidget {
 }
 
 class _RecentTransactions extends StatelessWidget {
+  final AccountModel account;
+  const _RecentTransactions({required this.account});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Transacciones recientes',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-              ),
-              GestureDetector(
-                onTap: () {},
-                child: const Text(
-                  'Ver todas',
-                  style: TextStyle(color: Color(0xFF7B5CFA), fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView(
-              children: const [
-                _TransactionTile(
-                  type: TransactionType.received,
-                  title: 'Recibido de Carlos',
-                  time: 'Hoy, 10:30 AM',
-                  amount: 50.00,
-                  status: 'Completado',
-                ),
-                _TransactionTile(
-                  type: TransactionType.sent,
-                  title: 'Enviado a Laura',
-                  time: 'Ayer, 15:45 PM',
-                  amount: -120.00,
-                  status: 'Completado',
-                ),
-                _TransactionTile(
-                  type: TransactionType.sent,
-                  title: 'Enviado a Miguel',
-                  time: '12 Jun, 09:15 AM',
-                  amount: -75.50,
-                  status: 'Completado',
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: BlocBuilder<AccountCubit, AccountState>(
+        builder: (context, state) {
+          return state.when(
+            initial: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (message) => Center(child: Text('Error: $message')),
+            loaded: (account, transactions) {
+              if (transactions.isEmpty) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text(
+                        'No hay transacciones',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Tus transacciones recientes aparecerán aquí',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Transacciones recientes',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: ListView(
+                      children:
+                          transactions.take(10).map((transfer) {
+                            final isSent =
+                                transfer.originAccount.id == account.id;
+                            return _TransactionTile(
+                              type:
+                                  isSent
+                                      ? TransactionType.sent
+                                      : TransactionType.received,
+                              title:
+                                  isSent
+                                      ? 'Enviado a ${transfer.recipientAccount.fullName}'
+                                      : 'Recibido de ${transfer.originAccount.fullName}',
+                              time: _formatDate(transfer.createdAt),
+                              amount:
+                                  isSent ? -transfer.amount : transfer.amount,
+                              status: 'Completado',
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
+      return 'Hoy, ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+    }
+    final months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+    return '${date.day} ${months[date.month - 1]}, ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+  }
+
+  String _twoDigits(int n) => n.toString().padLeft(2, '0');
 }
 
 enum TransactionType { sent, received }
@@ -231,7 +294,7 @@ class _TransactionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(5),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -239,18 +302,16 @@ class _TransactionTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icono
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha(10),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
-          // Información
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,7 +331,6 @@ class _TransactionTile extends StatelessWidget {
               ],
             ),
           ),
-          // Monto y estado
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -288,94 +348,6 @@ class _TransactionTile extends StatelessWidget {
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNavigationBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            icon: Icons.home,
-            label: 'Inicio',
-            isActive: false,
-            onTap: () => context.go('/'),
-          ),
-          _NavItem(
-            icon: Icons.bar_chart,
-            label: 'Actividad',
-            isActive: true,
-            onTap: () {},
-          ),
-          _NavItem(
-            icon: Icons.credit_card,
-            label: 'Tarjetas',
-            isActive: false,
-            onTap: () {},
-          ),
-          _NavItem(
-            icon: Icons.person,
-            label: 'Perfil',
-            isActive: false,
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? const Color(0xFF7B5CFA) : Colors.grey,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? const Color(0xFF7B5CFA) : Colors.grey,
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            ),
           ),
         ],
       ),

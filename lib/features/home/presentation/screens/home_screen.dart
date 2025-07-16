@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meru_test/core/extensions/account_model_extension.dart';
 import 'package:meru_test/core/shared/data/models/account_model.dart';
-import 'package:meru_test/features/account/account_screen.dart';
+import 'package:meru_test/features/account/presentation/screens/account_screen.dart';
 import 'package:meru_test/features/home/presentation/cubit/home_cubit.dart';
-import 'package:meru_test/features/transfer_history/transfer_history_screen.dart';
+import 'package:meru_test/features/transfer_history/presentation/screens/transfer_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = 'home';
@@ -39,10 +39,8 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.grey[50],
             body: Column(
               children: [
-                // Header con degradado y saldo
                 const _Header(),
 
-                // Loader o lista de contactos
                 const SizedBox(height: 12),
                 Expanded(
                   child: state.when(
@@ -147,7 +145,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-// Widget para contacto
 class _AccountTile extends StatelessWidget {
   const _AccountTile({required this.account, required this.onTap});
 

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meru_test/features/account/data/repositories/account_repository_impl.dart';
+import 'package:meru_test/features/account/presentation/cubit/account_cubit.dart';
 import 'package:meru_test/features/transfer/presentation/cubit/transfer_cubit.dart';
+import 'package:meru_test/features/transfer_history/data/repositories/transfer_history_repository_impl.dart';
+import 'package:meru_test/features/transfer_history/presentation/cubit/transfer_history_cubit.dart';
 
 import 'core/router/app_router.dart';
 import 'core/shared/data/datasources/mock_account_datasource.dart';
@@ -31,6 +35,21 @@ class MeruTest extends StatelessWidget {
                   accountDataSource: MockAccountDataSource(),
                   transferDataSource: MockTransferDataSource(),
                 ),
+              ),
+        ),
+        BlocProvider(
+          create:
+              (context) => TransferHistoryCubit(
+                TransferHistoryRepositoryImpl(
+                  dataSource: MockTransferDataSource(),
+                ),
+              ),
+        ),
+
+        BlocProvider(
+          create:
+              (context) => AccountCubit(
+                AccountRepositoryImpl(dataSource: MockTransferDataSource()),
               ),
         ),
       ],

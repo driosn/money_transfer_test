@@ -10,15 +10,15 @@ part 'home_cubit.freezed.dart';
 class HomeCubit extends Cubit<HomeState> {
   final HomeRepository repository;
 
-  HomeCubit(this.repository) : super(const HomeState.initial());
+  HomeCubit(this.repository) : super(const _Initial());
 
   Future<void> getAccounts() async {
-    emit(const HomeState.loading());
+    emit(const _Loading());
     await Future.delayed(const Duration(seconds: 2));
     final result = await repository.getAccounts();
     result.fold(
-      (failure) => emit(HomeState.error(failure.message)),
-      (accounts) => emit(HomeState.loaded(accounts)),
+      (failure) => emit(_Error(failure.message)),
+      (accounts) => emit(_Loaded(accounts)),
     );
   }
 }

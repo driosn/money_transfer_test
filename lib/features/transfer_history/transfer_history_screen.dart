@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meru_test/core/shared/data/datasources/mock_transfer_history_datasource.dart';
+import 'package:meru_test/core/shared/common/transfer.dart';
+import 'package:meru_test/features/transfer_history/presentation/cubit/transfer_history_cubit.dart';
 
-class TransferHistoryScreen extends StatelessWidget {
+class TransferHistoryScreen extends StatefulWidget {
   const TransferHistoryScreen({super.key});
 
   static const String routeName = 'transfer-history';
   static const String routePath = '/transfer-history';
 
   @override
-  Widget build(BuildContext context) {
-    // Use the mock data source to get transfers
-    final transfers = MockTransferHistoryDataSource().getTransfers();
+  State<TransferHistoryScreen> createState() => _TransferHistoryScreenState();
+}
 
+class _TransferHistoryScreenState extends State<TransferHistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<TransferHistoryCubit>().fetchTransferHistory();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: Column(
@@ -20,31 +30,44 @@ class TransferHistoryScreen extends StatelessWidget {
           const _Header(),
           const SizedBox(height: 12),
           Expanded(
-            child:
-                transfers.isEmpty
-                    ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'No hay transferencias',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+            child: BlocBuilder<TransferHistoryCubit, TransferHistoryState>(
+              builder: (context, state) {
+                return state.when(
+                  initial: () {
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  loading:
+                      () => const Center(child: CircularProgressIndicator()),
+                  error: (message) => Center(child: Text('Error: $message')),
+                  loaded: (transfers) {
+                    if (transfers.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No hay transferencias',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Tus transferencias aparecerán aquí',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView(
+                            SizedBox(height: 8),
+                            Text(
+                              'Tus transferencias aparecerán aquí',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 0.0,
@@ -64,7 +87,11 @@ class TransferHistoryScreen extends StatelessWidget {
                           (transfer) => _TransferTile(transfer: transfer),
                         ),
                       ],
-                    ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -108,7 +135,7 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48), // Balance the back button
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -118,10 +145,29 @@ class _Header extends StatelessWidget {
 class _TransferTile extends StatelessWidget {
   const _TransferTile({required this.transfer});
 
-  final transfer;
+  final Transfer transfer;
 
   @override
   Widget build(BuildContext context) {
+    String formatDateSpanish(DateTime date) {
+      const months = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre',
+      ];
+      String twoDigits(int n) => n.toString().padLeft(2, '0');
+      return '${date.day} de ${months[date.month - 1]}, ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -130,55 +176,99 @@ class _TransferTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withAlpha(3),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7B5CFA).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.swap_horiz,
-                  color: Color(0xFF7B5CFA),
-                  size: 20,
-                ),
+              CircleAvatar(
+                radius: 22,
+                backgroundImage: NetworkImage(transfer.originAccount.avatarUrl),
+                backgroundColor: const Color(0xFF7B5CFA).withOpacity(0.1),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      '${_accountDisplay(transfer.originAccount)} → ${_accountDisplay(transfer.recipientAccount)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                    const Icon(
+                      Icons.arrow_forward,
+                      color: Color(0xFF7B5CFA),
+                      size: 24,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      _formatDate(transfer.createdAt),
+                      formatDateSpanish(transfer.createdAt),
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              Text(
-                '-\$${transfer.amount.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              const SizedBox(width: 12),
+
+              CircleAvatar(
+                radius: 22,
+                backgroundImage: NetworkImage(
+                  transfer.recipientAccount.avatarUrl,
+                ),
+
+                backgroundColor: const Color(0xFF5B8DF6).withOpacity(0.1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  transfer.originAccount.fullName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  transfer.recipientAccount.fullName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                  textAlign: TextAlign.right,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Color(0xFF7C3AED),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Monto: \$${transfer.amount.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
@@ -186,44 +276,5 @@ class _TransferTile extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  static String _formatDate(DateTime date) {
-    // Format: "15 Jan, 14:30"
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    return '${date.day} ${months[date.month - 1]}, ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
-  }
-
-  static String _twoDigits(int n) => n.toString().padLeft(2, '0');
-
-  static String _accountDisplay(dynamic account) {
-    // Try to display name, else fallback to id or toString
-    if (account == null) return 'Unknown';
-    if (account is Map && account.containsKey('name')) return account['name'];
-    if (account is Map && account.containsKey('id')) {
-      return account['id'].toString();
-    }
-    if (account is Object && account.toString().isNotEmpty) {
-      return account.toString();
-    }
-    try {
-      return account.name ?? account.id?.toString() ?? 'Unknown';
-    } catch (_) {
-      return 'Unknown';
-    }
   }
 }

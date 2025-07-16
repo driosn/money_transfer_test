@@ -12,6 +12,19 @@ class MockAccountDataSource extends Mock implements AccountDataSource {}
 
 class MockTransferDataSource extends Mock implements TransferDataSource {}
 
+final dummyOrigin = AccountModel(
+  id: '1',
+  fullName: 'Origin',
+  avatarUrl: '',
+  balance: 100.0,
+);
+final dummyRecipient = AccountModel(
+  id: '2',
+  fullName: 'Recipient',
+  avatarUrl: '',
+  balance: 100.0,
+);
+
 void main() {
   group('TransferRepositoryImpl', () {
     late TransferRepositoryImpl repository;
@@ -31,11 +44,9 @@ void main() {
       test(
         'should return success when transfer is executed successfully',
         () async {
-          // Arrange
           final transferDetails = TransferDetails(
-            originBalance: 100.0,
-            originAccountId: '1',
-            recipientId: '2',
+            originAccount: dummyOrigin,
+            recipientAccount: dummyRecipient,
             amount: 50.0,
           );
 
@@ -43,10 +54,8 @@ void main() {
             () => mockTransferDataSource.executeTransfer(transferDetails),
           ).thenAnswer((_) async {});
 
-          // Act
           final result = await repository.executeTransfer(transferDetails);
 
-          // Assert
           expect(result, isA<Right<Failure, void>>());
           verify(
             () => mockTransferDataSource.executeTransfer(transferDetails),
@@ -55,18 +64,14 @@ void main() {
       );
 
       test('should return failure when amount is zero', () async {
-        // Arrange
         final transferDetails = TransferDetails(
-          originBalance: 100.0,
-          originAccountId: '1',
-          recipientId: '2',
+          originAccount: dummyOrigin,
+          recipientAccount: dummyRecipient,
           amount: 0.0,
         );
 
-        // Act
         final result = await repository.executeTransfer(transferDetails);
 
-        // Assert
         expect(result, isA<Left<Failure, void>>());
         expect(
           (result as Left).value.message,
@@ -75,18 +80,14 @@ void main() {
       });
 
       test('should return failure when amount is negative', () async {
-        // Arrange
         final transferDetails = TransferDetails(
-          originBalance: 100.0,
-          originAccountId: '1',
-          recipientId: '2',
+          originAccount: dummyOrigin,
+          recipientAccount: dummyRecipient,
           amount: -10.0,
         );
 
-        // Act
         final result = await repository.executeTransfer(transferDetails);
 
-        // Assert
         expect(result, isA<Left<Failure, void>>());
         expect(
           (result as Left).value.message,
@@ -95,28 +96,27 @@ void main() {
       });
 
       test('should return failure when insufficient balance', () async {
-        // Arrange
         final transferDetails = TransferDetails(
-          originBalance: 30.0,
-          originAccountId: '1',
-          recipientId: '2',
+          originAccount: AccountModel(
+            id: '1',
+            fullName: 'Origin',
+            avatarUrl: '',
+            balance: 30.0,
+          ),
+          recipientAccount: dummyRecipient,
           amount: 50.0,
         );
 
-        // Act
         final result = await repository.executeTransfer(transferDetails);
 
-        // Assert
         expect(result, isA<Left<Failure, void>>());
         expect((result as Left).value.message, 'Saldo insuficiente.');
       });
 
       test('should return failure when transfer throws exception', () async {
-        // Arrange
         final transferDetails = TransferDetails(
-          originBalance: 100.0,
-          originAccountId: '1',
-          recipientId: '2',
+          originAccount: dummyOrigin,
+          recipientAccount: dummyRecipient,
           amount: 50.0,
         );
 
@@ -124,10 +124,8 @@ void main() {
           () => mockTransferDataSource.executeTransfer(transferDetails),
         ).thenThrow(Exception('Transfer failed'));
 
-        // Act
         final result = await repository.executeTransfer(transferDetails);
 
-        // Assert
         expect(result, isA<Left<Failure, void>>());
         expect((result as Left).value.message, 'Exception: Transfer failed');
       });
@@ -137,7 +135,6 @@ void main() {
       test(
         'should return list of recipients excluding origin account',
         () async {
-          // Arrange
           final origin = AccountModel(
             id: '1',
             fullName: 'John Doe',
@@ -165,10 +162,8 @@ void main() {
             () => mockAccountDataSource.getAccounts(),
           ).thenAnswer((_) async => allAccounts);
 
-          // Act
           final result = await repository.getRecipients(origin);
 
-          // Assert
           expect(result, isA<Right<Failure, List<AccountModel>>>());
           final recipients = (result as Right).value;
           expect(recipients.length, 2);
@@ -178,7 +173,6 @@ void main() {
       );
 
       test('should return failure when getAccounts throws exception', () async {
-        // Arrange
         final origin = AccountModel(
           id: '1',
           fullName: 'John Doe',
@@ -190,10 +184,8 @@ void main() {
           () => mockAccountDataSource.getAccounts(),
         ).thenThrow(Exception('Failed to get accounts'));
 
-        // Act
         final result = await repository.getRecipients(origin);
 
-        // Assert
         expect(result, isA<Left<Failure, List<AccountModel>>>());
         expect(
           (result as Left).value.message,

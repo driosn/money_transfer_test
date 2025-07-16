@@ -12,4 +12,8 @@ abstract class TransferRepository {
   Future<Either<Failure, List<AccountModel>>> getRecipients(
     AccountModel origin,
   );
+
+  Future<Either<Failure, void>> saveTransferToHistory(
+    TransferDetails transferDetails,
+  );
 }

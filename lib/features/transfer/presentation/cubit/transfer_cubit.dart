@@ -18,10 +18,24 @@ class TransferCubit extends Cubit<TransferState> {
 
     final result = await _transferRepository.executeTransfer(transferDetails);
 
-    result.fold(
-      (failure) => emit(_Error(failure.message)),
-      (_) => emit(const _Success()),
+    final foldedResult = result.fold(
+      (failure) => _Error(failure.message),
+      (_) => const _Success(),
     );
+
+    if (foldedResult is _Error) {
+      emit(foldedResult);
+      return;
+    } else {
+      final saveResult = await _transferRepository.saveTransferToHistory(
+        transferDetails,
+      );
+
+      saveResult.fold(
+        (failure) => emit(_Error(failure.message)),
+        (_) => emit(const _Success()),
+      );
+    }
   }
 }
 

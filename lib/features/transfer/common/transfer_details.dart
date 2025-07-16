@@ -1,13 +1,13 @@
+import 'package:meru_test/core/shared/data/models/account_model.dart';
+
 class TransferDetails {
-  final double originBalance;
-  final String originAccountId;
-  final String recipientId;
+  final AccountModel originAccount;
+  final AccountModel recipientAccount;
   final double amount;
 
   TransferDetails({
-    required this.originBalance,
-    required this.originAccountId,
-    required this.recipientId,
+    required this.originAccount,
+    required this.recipientAccount,
     required this.amount,
   });
 }

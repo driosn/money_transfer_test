@@ -7,8 +7,8 @@ import 'package:meru_test/features/home/presentation/screens/home_screen.dart';
 import 'package:meru_test/features/transfer/common/transfer_details.dart';
 import 'package:meru_test/features/transfer/presentation/cubit/transfer_cubit.dart';
 
-import 'presentation/cubit/transfer_form_cubit.dart';
-import 'presentation/widgets/transfer_form.dart';
+import '../cubit/transfer_form_cubit.dart';
+import '../widgets/transfer_form.dart';
 
 class TransferScreen extends StatefulWidget {
   static const String routeName = 'transfer';
@@ -83,9 +83,7 @@ class _TransferScreenState extends State<TransferScreen> {
               children: [
                 Column(
                   children: [
-                    // Header
                     _TransferHeader(),
-                    // Contenido principal
                     Expanded(
                       child: TransferForm(
                         originAccount: widget.account,

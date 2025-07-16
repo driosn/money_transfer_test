@@ -1,16 +1,14 @@
 import 'package:go_router/go_router.dart';
 import 'package:meru_test/core/shared/data/models/account_model.dart';
-import 'package:meru_test/features/transfer_history/transfer_history_screen.dart';
+import 'package:meru_test/features/transfer_history/presentation/screens/transfer_history_screen.dart';
 
-import '../../features/account/account_screen.dart';
+import '../../features/account/presentation/screens/account_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/transfer/transfer_screen.dart';
+import '../../features/transfer/presentation/screens/transfer_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: HomeScreen.routePath,
-    debugLogDiagnostics: true,
-    restorationScopeId: 'meru_test_router',
     routes: [
       GoRoute(
         path: HomeScreen.routePath,

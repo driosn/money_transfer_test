@@ -122,7 +122,6 @@ class _TransferFormState extends State<TransferForm> {
                 onChanged: (value) => _onAmountChanged(context, value),
               ),
               const SizedBox(height: 16),
-              // Información de saldo
               _BalanceInfo(),
               const Spacer(),
 

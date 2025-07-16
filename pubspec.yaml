@@ -28,8 +28,16 @@ dev_dependencies:
   bloc_test: ^9.1.5
   mocktail: ^1.0.3
   test: ^1.24.9
+  flutter_launcher_icons: "^0.14.4"
 
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/ic_launcher.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
